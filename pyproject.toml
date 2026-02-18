@@ -30,12 +30,15 @@ requires-python = ">=3.10"
 dependencies = [
     "anthropic>=0.40.0",
     "python-dotenv>=1.0.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
 ]
 
 # 개발할 때만 필요한 라이브러리 (테스트, 린터 등)
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
+    "httpx>=0.27.0",
     "ruff>=0.8.0",
 ]
 
@@ -43,6 +46,7 @@ dev = [
 # pip install 후 터미널에서 "ai-agent" 명령어로 실행 가능
 [project.scripts]
 ai-agent = "ai_agent.main:main"
+ai-agent-serve = "ai_agent.api:serve"
 
 # ── Ruff 설정 (코드 린터 & 포매터) ──
 # Python의 대표적인 코드 품질 도구

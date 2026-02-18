@@ -8,13 +8,21 @@ AI 에이전트의 핵심 로직입니다.
 """
 
 import json
+import logging
+
 import anthropic
 
 from ai_agent import config
 from ai_agent.tools import TOOLS, run_tool
 
+logger = logging.getLogger(__name__)
 
-def run(user_message: str, verbose: bool = True) -> str:
+
+def run(
+    user_message: str,
+    verbose: bool = True,
+    max_iterations: int | None = None,
+) -> str:
     """
     에이전트 메인 루프.
 
@@ -23,10 +31,13 @@ def run(user_message: str, verbose: bool = True) -> str:
     Args:
         user_message: 사용자가 입력한 텍스트
         verbose: True면 도구 호출 과정을 출력 (디버깅에 유용)
+        max_iterations: 최대 반복 횟수 (None이면 config.MAX_ITERATIONS 사용)
 
     Returns:
         AI의 최종 답변 텍스트
     """
+
+    iterations = max_iterations if max_iterations is not None else config.MAX_ITERATIONS
 
     # API 클라이언트 생성
     client = anthropic.Anthropic(api_key=config.API_KEY)
@@ -35,10 +46,9 @@ def run(user_message: str, verbose: bool = True) -> str:
     messages = [{"role": "user", "content": user_message}]
 
     # ── 에이전트 루프 ──
-    for turn in range(config.MAX_ITERATIONS):
+    for turn in range(iterations):
 
-        if verbose:
-            print(f"\n--- 🔄 AI 호출 #{turn + 1} ---")
+        logger.info("AI 호출 #%d", turn + 1)
 
         # Claude API 호출
         response = client.messages.create(
@@ -53,8 +63,7 @@ def run(user_message: str, verbose: bool = True) -> str:
         if response.stop_reason == "end_turn":
             for block in response.content:
                 if hasattr(block, "text"):
-                    if verbose:
-                        print("--- ✅ 최종 답변 완성 ---")
+                    logger.info("최종 답변 완성")
                     return block.text
             return "(답변 없음)"
 
@@ -68,16 +77,15 @@ def run(user_message: str, verbose: bool = True) -> str:
             tool_results = []
             for block in response.content:
                 if block.type == "tool_use":
-                    if verbose:
-                        print(
-                            f"    🔧 도구: {block.name}"
-                            f"({json.dumps(block.input, ensure_ascii=False)})"
-                        )
+                    logger.info(
+                        "도구: %s(%s)",
+                        block.name,
+                        json.dumps(block.input, ensure_ascii=False),
+                    )
 
                     result = run_tool(block.name, block.input)
 
-                    if verbose:
-                        print(f"    📋 결과: {result}")
+                    logger.info("결과: %s", result)
 
                     tool_results.append({
                         "type": "tool_result",

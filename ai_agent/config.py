@@ -27,6 +27,10 @@ MODEL = os.environ.get("MODEL", "claude-sonnet-4-5-20250514")
 # 에이전트 루프 최대 반복 횟수 (가드레일)
 MAX_ITERATIONS = int(os.environ.get("MAX_ITERATIONS", "10"))
 
+# REST API 서버 설정
+HOST = os.environ.get("HOST", "0.0.0.0")
+PORT = int(os.environ.get("PORT", "8000"))
+
 # 시스템 프롬프트 (AI의 성격과 행동 지침)
 SYSTEM_PROMPT = (
     "당신은 도움이 되는 한국어 AI 어시스턴트입니다. "
